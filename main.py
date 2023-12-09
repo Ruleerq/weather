@@ -1,3 +1,5 @@
+import threading
+
 from PIL import Image, ImageDraw, ImageFont
 import requests
 from datetime import datetime, timedelta
@@ -6,35 +8,33 @@ import os
 from io import BytesIO
 import shutil
 from zipfile import ZipFile
+from concurrent.futures import ThreadPoolExecutor
 def find_available_images(base_url, current_time, max_hours_back=24, num_images=10):
 
     found_urls = []
     checked_hours = 0
 
     while len(found_urls) < num_images and checked_hours < max_hours_back:
-        check_hour = current_time.hour - checked_hours
+        check_hour = current_time.hour
         check_date = current_time.date()
-        if check_hour < 0:
-            check_date -= timedelta(days=1)
-            check_hour += 24
 
         url = f"{base_url}{check_date.strftime('%Y-%m-%d')}_{check_hour:02d}-00-00.png"
-        # print(f"Checking URL: {url}")  # Sprawdzanie URL
 
         response = requests.head(url)
         if response.status_code == 200:
             found_urls.append(url)
 
         checked_hours += 1
+        current_time -= timedelta(hours=1)  # Aktualizacja czasu
 
     return found_urls if found_urls else None
 
 def download_image(url, file_path):
 
-
     if os.path.exists(file_path): #Check if file exists
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"{current_time} Obraz {file_path} już istnieje. Pobieranie anulowane.")
+        with print_lock:
+            print(f"{current_time} Obraz {file_path} już istnieje. Pobieranie anulowane.")
         return False
 
     #Download and save iamge
@@ -44,8 +44,8 @@ def download_image(url, file_path):
             image.save(file_path)
             modification_time = datetime.fromtimestamp(os.path.getmtime(file_path))
             formatted_time = modification_time.strftime("%Y-%m-%d %H:%M:%S")
-        print(f"Obraz został pobrany i zapisany jako {file_path}, data modyfikacji obrazu: {formatted_time}")
-        time.sleep(3)
+        with print_lock:
+            print(f"Obraz został pobrany i zapisany jako {file_path}, data modyfikacji obrazu: {formatted_time}")
         return True
     except Exception as e:
         print("Wystąpił błąd podczas pobierania lub zapisywania obrazu:", e)
@@ -115,22 +115,29 @@ def archive_images(save_dir):
         print("Nie ma wystarczającej liczby obrazów do archiwizacji.")
 
 def create_animation(save_dir, gif_name='animation.gif',duration=500):
-    images = sorted(os.listdir(save_dir), key=lambda x: os.path.getmtime(os.path.join(save_dir,x)), reverse=True)
+    images = os.listdir(save_dir)
+    images.sort()
     frames = [Image.open(os.path.join(save_dir, image)) for image in images]
     frame_one = frames[0]
     frame_one.save(gif_name, format="GIF", append_images=frames[1:], save_all=True, duration=duration, loop=0)
 
+def process_image(url, save_dir):
+    date_hour = url.split('/')[-1].split('.')[0]
+    file_path = os.path.join(save_dir, f"{date_hour}.png")
+
+    if download_image(url, file_path):  # Check if image is downloaded
+        image = Image.open(file_path)
+        edited_image = cut_image(image)
+        edited_image = add_date(edited_image, url)
+        edited_image.save(file_path)
+
 def process_images(urls, save_dir):
-    for url in urls:
-        date_hour = url.split('/')[-1].split('.')[0]
-        file_path = os.path.join(save_dir, f"{date_hour}.png")
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process_image, url, save_dir) for url in urls]
+        for future in futures:
+            future.result()
 
-        if download_image(url, file_path):  # Check if image is downloaded
-            image = Image.open(file_path)
-            edited_image = cut_image(image)
-            edited_image = add_date(edited_image, url)
-            edited_image.save(file_path)
-
+print_lock = threading.Lock()
 # Base URL for images
 base_url = "https://www.pogodowecentrum.pl/static/maps/current_weather_maps/temperature/pl/"
 
