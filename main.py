@@ -96,21 +96,20 @@ def archive_images(save_dir):
         os.makedirs(archived_dir)
 
     files = os.listdir(save_dir)
-    if len(files) > 10:
-        files.sort()
-        #files.sort(key=lambda x: os.path.getmtime(os.path.join(save_dir, x)))
-        oldest_file = files[0]
-        date = oldest_file.split('_')[0]
-
+    # files.sort(key=lambda x: os.path.getmtime(os.path.join(save_dir, x)))
+    files.sort()
+    for file_to_archive in files[10:]:
+        date = file_to_archive.split('_')[0]
         zip_name = f"{date}.zip"
         zip_path = os.path.join(archived_dir, zip_name)
 
-        shutil.move(os.path.join(save_dir, oldest_file), os.path.join(archived_dir, oldest_file))
-
+        # Przenoszenie i archiwizacja pliku
+        shutil.move(os.path.join(save_dir, file_to_archive), os.path.join(archived_dir, file_to_archive))
         with ZipFile(zip_path, 'a') as zipf:
-            zipf.write(os.path.join(archived_dir, oldest_file), oldest_file)
-            print(f"Obraz {oldest_file} przeniesiony do archiwum {zip_name}.")
-        os.remove(os.path.join(archived_dir,oldest_file))
+            zipf.write(os.path.join(archived_dir, file_to_archive), file_to_archive)
+            print(f"Obraz {file_to_archive} przeniesiony do archiwum {zip_name}.")
+
+        os.remove(os.path.join(archived_dir, file_to_archive))
     else:
         print("Nie ma wystarczającej liczby obrazów do archiwizacji.")
 
