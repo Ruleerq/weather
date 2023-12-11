@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .map-container {
+            position: relative;
+            display: inline-block;
+        }
+        .map-pin {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+<div id="animation" class="map-container">
+    <img src="{{ url_for('static', filename='animation.gif') }}" alt="Animacja">
+    <div id="mapPin" class="map-pin"></div> <!-- Dodano kropkę -->
+</div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,10 +1,10 @@
-from flask import Flask, send_file
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
 @app.route('/')
-def display_gif():
-    return send_file('animation.gif', mimetype='image/gif')
+def render_website():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
