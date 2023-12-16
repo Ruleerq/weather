@@ -5,8 +5,11 @@ function getUserLocation() {
       navigator.geolocation.getCurrentPosition(
         position => {
           resolve({
-            lat: 52.232361,//position.coords.latitude,
-            lng: 21.002769//position.coords.longitude
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+            //Warsaw coordinates
+            // lat: 52.232361,
+            // lng: 21.002769
           });
         },
         err => {
@@ -20,22 +23,22 @@ function getUserLocation() {
 }
 
 // Szczecin positions
-const knownCoordinates = { lat: 53.428543, lng: 	14.552812 }; // Latitude and Longitude
-const knownPixelPosition = { x: 190, y: 405 }; // Pixel position
+const SzczecinCoordinates = { lat: 53.428543, lng: 14.552812 }; // Latitude and Longitude
+const szczecinPixels = { x: 190, y: 405 }; // Pixel position
 
 // Rzeszow positions
-const newKnownCoordinates = { lat: 50.041187, lng: 21.999121 }; // Latitude and Longitude
-const newPixelPosition = { x: 1088, y: 1050 }; // Pixel position
+const RzeszowCoordinates = { lat: 50.041187, lng: 21.999121 }; // Latitude and Longitude
+const RzeszowPixels = { x: 1088, y: 1050 }; // Pixel position
 
 // Calculate the pixel and coordinate differences between two known points
 const knownPixelDifference = {
-    x: newPixelPosition.x - knownPixelPosition.x,
-    y: newPixelPosition.y - knownPixelPosition.y
+    x: RzeszowPixels.x - szczecinPixels.x,
+    y: RzeszowPixels.y - szczecinPixels.y
 };
 
 const knownCoordDifference = {
-    lat: newKnownCoordinates.lat - knownCoordinates.lat,
-    lng: newKnownCoordinates.lng - knownCoordinates.lng
+    lat: RzeszowCoordinates.lat - SzczecinCoordinates.lat,
+    lng: RzeszowCoordinates.lng - SzczecinCoordinates.lng
 };
 
 // Calculate the map scale in pixels per degree
@@ -44,16 +47,16 @@ const mapScale = {
     y: knownPixelDifference.y / knownCoordDifference.lat
 };
 
-// Function to calculate the pixel position from geographical coordinates
+// Calculate the pixel position from geographical coordinates
 function calculatePixelPosition(userCoordinates) {
   const pixelDifference = {
-    x: (userCoordinates.lng - knownCoordinates.lng) * mapScale.x,
-    y: (userCoordinates.lat - knownCoordinates.lat) * mapScale.y
+    x: (userCoordinates.lng - SzczecinCoordinates.lng) * mapScale.x,
+    y: (userCoordinates.lat - SzczecinCoordinates.lat) * mapScale.y
   };
 
   return {
-    x: knownPixelPosition.x + pixelDifference.x,
-    y: knownPixelPosition.y + pixelDifference.y * 1.10
+    x: szczecinPixels.x + pixelDifference.x,
+    y: szczecinPixels.y + pixelDifference.y * 1.10
   };
 }
 

@@ -113,12 +113,13 @@ def archive_images(save_dir):
     else:
         print("Nie ma wystarczającej liczby obrazów do archiwizacji.")
 
-def create_animation(save_dir, gif_name='animation.gif',duration=500):
+def create_animation(save_dir, gif_path='static\\animation.gif',duration=500):
     images = os.listdir(save_dir)
     images.sort()
     frames = [Image.open(os.path.join(save_dir, image)) for image in images]
     frame_one = frames[0]
-    frame_one.save(gif_name, format="GIF", append_images=frames[1:], save_all=True, duration=duration, loop=0)
+    frame_one.save(gif_path, format="GIF", append_images=frames[1:], save_all=True, duration=duration, loop=0)
+    print("GIF created")
 
 def process_image(url, save_dir):
     date_hour = url.split('/')[-1].split('.')[0]
@@ -137,7 +138,7 @@ def process_images(urls, save_dir):
             future.result()
 
 print_lock = threading.Lock()
-# Base URL for images
+
 base_url = "https://www.pogodowecentrum.pl/static/maps/current_weather_maps/temperature/pl/"
 
 current_time = datetime.now()
@@ -149,7 +150,7 @@ os.makedirs(save_dir, exist_ok=True)
 
 process_images(urls, save_dir)
 create_animation(save_dir)
-print("GIF created")
+
 
 while True:
     time.sleep(5)
